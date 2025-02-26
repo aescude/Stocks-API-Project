@@ -6,8 +6,23 @@
     <title>Stock Tracker</title>
 </head>
 <body>
-    <a href = "https://google.com">
-        <button style="font-size: 25px; background-color:rgb(0, 0, 0); color: rgb(255, 255, 255); border-radius: 100px">Submit Ticker Symbol</button>
+    <h1>Stock Tracker</h1>
+    <label for="ticker">Enter Stock Ticker Symbol:</label>
+    <input type="text" id="ticker" placeholder="e.g., AAPL">
+    <a id="submit-link">
+        <button style="font-size: 25px; background-color: black; color: white; border-radius: 100px">
+            Submit Ticker Symbol
+        </button>
     </a>
+
+    <script>
+        document.querySelector("button").addEventListener("click", function(event) {
+            const ticker = document.getElementById("ticker").value.trim();
+            if (ticker === "") {
+                alert("Please enter a stock ticker symbol.");
+                event.preventDefault();
+            }
+        });
+    </script>
 </body>
 </html>
