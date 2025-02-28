@@ -64,7 +64,7 @@
     <p id="stockPrice"></p>
 
     <script>
-        const apiKey = 'ZTCXLUG31K24WRZ3'; //API key provided by the website
+        const apiKey = '15533UVRKJJUXJ7U'; //API key provided by the website
         const apiUrl = 'https://www.alphavantage.co/query';
 
         document.getElementById("fetchStock").onclick = async () => { // When the button is clicked
