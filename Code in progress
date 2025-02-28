@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Tracker</title>
     <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
         button {
             font-size: 11px;
             letter-spacing: 1px;
@@ -58,18 +59,45 @@
     <h1>Stock Tracker</h1>
     <label for="ticker">Enter Stock Ticker Symbol:</label>
     <input type="text" id="ticker" placeholder="e.g., AAPL">
-    <a id="submit-link">
-        <button>Submit Ticker Symbol</button>
-    </a>
+    <button id="fetchStock">Submit</button>
+    <p id="stockName"></p>
+    <p id="stockPrice"></p>
 
     <script>
-        document.querySelector("button").addEventListener("click", function(event) {
-            const ticker = document.getElementById("ticker").value.trim();
-            if (ticker === "") {
-                alert("Please enter a stock ticker symbol.");
-                event.preventDefault();
+        const apiKey = 'ZTCXLUG31K24WRZ3'; //API key provided by the website
+        const apiUrl = 'https://www.alphavantage.co/query';
+
+        document.getElementById("fetchStock").onclick = async () => { // When the button is clicked
+            const ticker = document.getElementById("ticker").value.trim().toUpperCase(); 
+
+            if (!ticker) { // If there is no letters in the box, return an error
+                console.log("Please enter a stock ticker symbol.");
+                return;
             }
-        });
+
+
+        // Gets the stock data
+        const response = await fetch(apiUrl + "?function=TIME_SERIES_INTRADAY&symbol=" + encodeURIComponent(ticker) + "&interval=5min&apikey=" + apiKey); //TIME_SERIES_INTRADAY is a func created by alphaAdvantage that provides all stock information
+        const data = await response.json();
+        
+        //If the ticker inputted is wrong
+        if (!data["Meta Data"]) {
+            console.log("Invalid stock symbol.");
+            return;
+        }
+                
+        const timeSeries = data["Time Series (5min)"];
+        const latestTime = Object.keys(timeSeries)[0];
+        const latestPrice = timeSeries[latestTime]["1. open"];
+        
+        //Display ticker symbol
+        document.getElementById("stockName").textContent = 'Stock: ' + ticker;
+        //Display latest price
+        document.getElementById("stockPrice").textContent = 'Latest Price: $' + parseFloat(latestPrice).toFixed(2);
+
+
+        };
     </script>
 </body>
 </html>
+
