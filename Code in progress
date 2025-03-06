@@ -4,8 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
+        
         button {
             font-size: 11px;
             letter-spacing: 1px;
@@ -25,77 +27,76 @@
             transition: 0.3s ease all;
             z-index: 1;
         }
+
+        button:hover, button:focus { color: white; }
+        button:active { transform: scale(0.95); }
+
+        /* Make the canvas bigger */
         
-        button:before {
-            transition: 0.5s all ease;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            right: 50%;
-            bottom: 0;
-            opacity: 0;
-            content: '';
-            background-color: #FF0072;
-            z-index: -1;
-        }
-        
-        button:hover, button:focus {
-            color: white;
-        }
-        
-        button:hover:before, button:focus:before {
-            transition: 0.5s all ease;
-            left: 0;
-            right: 0;
-            opacity: 1;
-        }
-        
-        button:active {
-            transform: scale(0.45);
-        }
     </style>
 </head>
 <body>
+    <canvas id="chart" width="60" height="60"></canvas>
     <h1>Stock Tracker</h1>
     <label for="ticker">Enter Stock Ticker Symbol:</label>
     <input type="text" id="ticker" placeholder="e.g., AAPL">
     <button id="fetchStock">Submit</button>
     <p id="stockName"></p>
     <p id="stockPrice"></p>
+    <canvas id="stockChart"></canvas>
 
     <script>
-        const apiKey = '15533UVRKJJUXJ7U'; //API key provided by the website
+        const apiKey = '15533UVRKJJUXJ7U'; 
         const apiUrl = 'https://www.alphavantage.co/query';
+        let stockChart;
 
-        document.getElementById("fetchStock").onclick = async () => { // When the button is clicked
+        document.getElementById("fetchStock").onclick = async () => {
             const ticker = document.getElementById("ticker").value.trim().toUpperCase(); 
 
-            if (!ticker) { // If there is no letters in the box, return an error
+            if (!ticker) {
                 console.log("Please enter a stock ticker symbol.");
                 return;
             }
 
+            const response = await fetch(`${apiUrl}?function=TIME_SERIES_INTRADAY&symbol=${encodeURIComponent(ticker)}&interval=5min&apikey=${apiKey}`);
+            const data = await response.json();
+            
+            if (!data["Meta Data"]) {
+                console.log(data);
+                return;
+            }
 
-        // Gets the stock data
-        const response = await fetch(apiUrl + "?function=TIME_SERIES_INTRADAY&symbol=" + encodeURIComponent(ticker) + "&interval=5min&apikey=" + apiKey); //TIME_SERIES_INTRADAY is a func created by alphaAdvantage that provides all stock information
-        const data = await response.json();
-        
-        //If the ticker inputted is wrong
-        if (!data["Meta Data"]) {
-            console.log("Invalid stock symbol.");
-            return;
-        }
-                
-        const timeSeries = data["Time Series (5min)"];
-        const latestTime = Object.keys(timeSeries)[0];
-        const latestPrice = timeSeries[latestTime]["1. open"];
-        
-        //Display ticker symbol
-        document.getElementById("stockName").textContent = 'Stock: ' + ticker;
-        //Display latest price
-        document.getElementById("stockPrice").textContent = 'Latest Price: $' + parseFloat(latestPrice).toFixed(2);
+            const timeSeries = data["Time Series (5min)"];
+            const labels = Object.keys(timeSeries).reverse(); 
+            const prices = labels.map(time => parseFloat(timeSeries[time]["1. open"]));
 
+            document.getElementById("stockName").textContent = 'Stock: ' + ticker;
+            document.getElementById("stockPrice").textContent = 'Latest Price: $' + prices.at(-1).toFixed(2);
 
+            
+            const ctx = document.getElementById('stockChart').getContext('2d');
+            stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${ticker} Stock Price (5min interval)`,
+                        data: prices,
+                        borderColor: 'red',
+                        backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Time' } },
+                        y: { title: { display: true, text: 'Stock Price ($)' }, beginAtZero: false }
+                    }
+                }
+            });
         };
     </script>
 </body>
